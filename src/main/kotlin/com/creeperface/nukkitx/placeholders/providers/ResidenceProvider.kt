@@ -53,6 +53,12 @@ object ResidenceProvider {
             Residence.getTransactionManager().getSaleAmount(res.name)
         })
 
+        papi.visitorSensitivePlaceholder<Boolean>("${PREFIX}current_for_sale", BiFunction { p, _ ->
+            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction false
+
+            Residence.getTransactionManager().isForSale(res.name)
+        })
+
         papi.visitorSensitivePlaceholder<Int>("${PREFIX}current_bank", BiFunction { p, _ ->
             val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction 0
 
@@ -88,7 +94,7 @@ object ResidenceProvider {
             Residence.getPermissionManager().getGroup(p).maxZ
         })
 
-        papi.visitorSensitivePlaceholder<Boolean>("${PREFIX}user_cancreate", BiFunction { p, _ ->
+        papi.visitorSensitivePlaceholder<Boolean>("${PREFIX}user_can_create", BiFunction { p, _ ->
             Residence.getPermissionManager().getGroup(p).canCreateResidences()
         })
 

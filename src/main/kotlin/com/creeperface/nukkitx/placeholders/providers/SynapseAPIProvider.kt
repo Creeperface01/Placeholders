@@ -38,7 +38,7 @@ object SynapseAPIProvider {
         papi.staticPlaceholder<String>("${PREFIX}_status", Function { params ->
             val offlineValue = params["false"] ?: "offline"
 
-            val server = params.single() ?: return@Function offlineValue
+            val server = params["server"] ?: params.single() ?: return@Function offlineValue
 
             val dataEntry = getClientData(server) ?: return@Function offlineValue
 
