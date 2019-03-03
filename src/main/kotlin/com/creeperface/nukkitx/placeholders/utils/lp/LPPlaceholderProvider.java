@@ -26,7 +26,6 @@
 package com.creeperface.nukkitx.placeholders.utils.lp;
 
 import cn.nukkit.Player;
-import cn.nukkit.utils.MainLogger;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -118,7 +117,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
                                 .map(Node::getGroupName)
                                 .anyMatch(t::containsGroup)
                         )
-                .orElse(false)
+                        .orElse(false)
         );
         builder.addStatic("highest_group_by_weight", (player, user, userData, contexts) ->
                 user.getPermissions().stream()

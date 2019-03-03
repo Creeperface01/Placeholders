@@ -33,7 +33,7 @@ public interface PlaceholderProvider {
     /**
      * Handles a placeholder request
      *
-     * @param player the player placeholders are being requested for
+     * @param player      the player placeholders are being requested for
      * @param placeholder the placeholder string
      * @return the resultant value
      */

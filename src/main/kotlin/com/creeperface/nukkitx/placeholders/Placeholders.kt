@@ -55,7 +55,7 @@ class Placeholders : PluginBase() {
 
         val section = cfg.getSection("placeholders")
 
-        if(section.isNullOrEmpty()) {
+        if (section.isNullOrEmpty()) {
             return
         }
 

@@ -11,6 +11,8 @@ object NukkitProvider {
     private const val PREFIX = ""
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
-        papi.visitorSensitivePlaceholder<Boolean>("has_permission", BiFunction { p, params -> p.hasPermission(params.single() ?: "") })
+        papi.visitorSensitivePlaceholder<Boolean>(
+            "has_permission",
+            BiFunction { p, params -> p.hasPermission(params.single() ?: "") })
     }
 }

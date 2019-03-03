@@ -1,6 +1,5 @@
 package com.creeperface.nukkitx.placeholders.providers
 
-import cn.nukkit.Player
 import cn.nukkit.utils.MainLogger
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import com.creeperface.nukkitx.placeholders.utils.lp.LPPlaceholderProvider
@@ -68,7 +67,7 @@ object LuckPermsProvider : PlaceholderPlatform {
     }
 
     private fun getPlaceholderWithParams(placeholder: String, params: List<String>): String {
-        if(params.isEmpty()) return placeholder
+        if (params.isEmpty()) return placeholder
 
         return placeholder + "_" + params.joinToString("_")
     }

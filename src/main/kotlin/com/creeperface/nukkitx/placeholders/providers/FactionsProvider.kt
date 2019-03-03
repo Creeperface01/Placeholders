@@ -14,6 +14,8 @@ object FactionsProvider {
     fun registerPlaceholders(papi: PlaceholderAPI) {
         val plugin = P.p
 
-        papi.visitorSensitivePlaceholder<String?>("${PREFIX}faction", BiFunction { p, _ ->  plugin.getPlayerFactionTag(p)})
+        papi.visitorSensitivePlaceholder<String?>(
+            "${PREFIX}faction",
+            BiFunction { p, _ -> plugin.getPlayerFactionTag(p) })
     }
 }

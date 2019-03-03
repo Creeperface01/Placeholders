@@ -1,6 +1,5 @@
 package com.creeperface.nukkitx.placeholders.providers
 
-import cn.nukkit.math.NukkitMath
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import com.creeperface.nukkit.placeholderapi.util.round
 import me.onebone.economyapi.EconomyAPI
