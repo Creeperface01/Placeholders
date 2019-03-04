@@ -52,7 +52,7 @@
         <dependency>
             <artifactId>luckperms-api</artifactId>
             <groupId>me.lucko.luckperms</groupId>
-            <version>4.2-SNAPSHOT</version>
+            <version>4.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
