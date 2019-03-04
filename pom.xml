@@ -68,6 +68,21 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.massivecraft.factions</groupId>
+            <artifactId>Factions</artifactId>
+            <version>0</version>
+            <optional>false</optional>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/Factions.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.bekvon.bukkit.residence</groupId>
+            <artifactId>Residence</artifactId>
+            <version>0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/Residence.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>ru.nukkit.multipass</groupId>
             <artifactId>Multipass</artifactId>
             <version>0</version>
