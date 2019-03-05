@@ -24,6 +24,11 @@ class Placeholders : PluginBase() {
                 LuckPermsProvider.registerPlaceholders(api)
                 logger.info("${TextFormat.AQUA}LuckPerms placeholders loaded")
             }
+            
+            getPlugin("Multipass")?.let {
+                MultipassProvider.registerPlaceholders(api)
+                logger.info("${TextFormat.AQUA}Multipass placeholders loaded")
+            }
 
             getPlugin("Factions")?.let {
                 FactionsProvider.registerPlaceholders(api)
