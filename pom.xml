@@ -52,7 +52,7 @@
         <dependency>
             <artifactId>luckperms-api</artifactId>
             <groupId>me.lucko.luckperms</groupId>
-            <version>4.2-SNAPSHOT</version>
+            <version>4.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -66,6 +66,28 @@
             <artifactId>synapse-api</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.massivecraft.factions</groupId>
+            <artifactId>Factions</artifactId>
+            <version>0</version>
+            <optional>false</optional>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/Factions.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.bekvon.bukkit.residence</groupId>
+            <artifactId>Residence</artifactId>
+            <version>0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/Residence.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>ru.nukkit.multipass</groupId>
+            <artifactId>Multipass</artifactId>
+            <version>0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/Multipass.jar</systemPath>
         </dependency>
     </dependencies>
 
