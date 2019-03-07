@@ -30,16 +30,28 @@ object MultipassProvider {
             Multipass.getGroups(p).joinToString(", ")
         })
 
-        papi.staticPlaceholder<String?>("${PREFIX}group_prefix", Function { params ->
-            Multipass.getGroupPrefix(params.single())
-        })
+        papi.staticPlaceholder<String?>(
+            name = "${PREFIX}group_prefix",
+            loader = Function { params ->
+                Multipass.getGroupPrefix(params.single())
+            },
+            processParameters = true
+        )
 
-        papi.staticPlaceholder<String?>("${PREFIX}group_suffix", Function { params ->
-            Multipass.getGroupSuffix(params.single())
-        })
+        papi.staticPlaceholder<String?>(
+            name = "${PREFIX}group_suffix",
+            loader = Function { params ->
+                Multipass.getGroupSuffix(params.single())
+            },
+            processParameters = true
+        )
 
-        papi.staticPlaceholder<Int>("${PREFIX}group_priority", Function { params ->
-            Multipass.getGroupPriority(params.single())
-        })
+        papi.staticPlaceholder<Int>(
+            name = "${PREFIX}group_priority",
+            loader = Function { params ->
+                Multipass.getGroupPriority(params.single())
+            },
+            processParameters = true
+        )
     }
 }

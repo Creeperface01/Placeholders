@@ -51,13 +51,16 @@ object LuckPermsProvider : PlaceholderPlatform {
 //                        })
                 }
 
-                papi.visitorSensitivePlaceholder<String?>(PREFIX + name,
-                    BFunc { p, params ->
+                papi.visitorSensitivePlaceholder<String?>(
+                    name = PREFIX + name,
+                    loader = BFunc { p, params ->
                         provider.onPlaceholderRequest(
                             p,
                             getPlaceholderWithParams(name, params.getAll().values + params.getUnnamed())
                         )
-                    })
+                    },
+                    processParameters = true
+                )
             }
 
         } catch (e: Exception) {

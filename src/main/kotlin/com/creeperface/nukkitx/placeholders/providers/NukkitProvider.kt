@@ -12,7 +12,9 @@ object NukkitProvider {
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
         papi.visitorSensitivePlaceholder<Boolean>(
-            "has_permission",
-            BiFunction { p, params -> p.hasPermission(params.single() ?: "") })
+            name = "has_permission",
+            loader = BiFunction { p, params -> p.hasPermission(params.single() ?: "") },
+            processParameters = true
+        )
     }
 }
