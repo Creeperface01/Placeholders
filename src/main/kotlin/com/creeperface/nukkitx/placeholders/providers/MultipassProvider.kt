@@ -3,6 +3,7 @@ package com.creeperface.nukkitx.placeholders.providers
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import ru.nukkit.multipass.Multipass
 import java.util.function.BiFunction
+import java.util.function.Function
 
 /**
  * @author Zen
@@ -13,12 +14,32 @@ object MultipassProvider {
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
 
-        papi.visitorSensitivePlaceholder<String?>(
-                "${PREFIX}prefix",
-                BiFunction { p, _ -> Multipass.getPrefix(p) })
+        papi.visitorSensitivePlaceholder<String?>("${PREFIX}prefix", BiFunction { p, _ ->
+            Multipass.getPrefix(p)
+        })
 
-        papi.visitorSensitivePlaceholder<String?>(
-                "${PREFIX}suffix",
-                BiFunction { p, _ -> Multipass.getSuffix(p) })
+        papi.visitorSensitivePlaceholder<String?>("${PREFIX}suffix", BiFunction { p, _ ->
+            Multipass.getSuffix(p)
+        })
+
+        papi.visitorSensitivePlaceholder<String?>("${PREFIX}group", BiFunction { p, _ ->
+            Multipass.getGroup(p)
+        })
+
+        papi.visitorSensitivePlaceholder<String>("${PREFIX}groups", BiFunction { p, _ ->
+            Multipass.getGroups(p).joinToString(", ")
+        })
+
+        papi.staticPlaceholder<String?>("${PREFIX}group_prefix", Function { params ->
+            Multipass.getGroupPrefix(params.single())
+        })
+
+        papi.staticPlaceholder<String?>("${PREFIX}group_suffix", Function { params ->
+            Multipass.getGroupSuffix(params.single())
+        })
+
+        papi.staticPlaceholder<Int>("${PREFIX}group_priority", Function { params ->
+            Multipass.getGroupPriority(params.single())
+        })
     }
 }

@@ -40,8 +40,6 @@ object SynapseAPIProvider {
 
             val server = params["server"] ?: params.single() ?: return@Function offlineValue
 
-            val dataEntry = getClientData(server) ?: return@Function offlineValue
-
             return@Function params["true"] ?: "online"
         })
     }
