@@ -16,5 +16,11 @@ object NukkitProvider {
             loader = BiFunction { p, params -> p.hasPermission(params.single() ?: "") },
             processParameters = true
         )
+
+        papi.visitorSensitivePlaceholder<Int>(
+            name = "player_item_in_hand_id",
+            loader = BiFunction { p, _ -> p.inventory.itemInHand.id },
+            processParameters = true
+        )
     }
 }
