@@ -6,4 +6,4 @@ description: "Placeholder provider for nukkit"
 author: CreeperFace
 
 depend: ["PlaceholderAPI"]
-softdepend: ["LuckPerms", "Factions", "EconomyAPI", "Residence", "SynapseAPI"]
+softdepend: ["LuckPerms", "Factions", "EconomyAPI", "Residence", "SynapseAPI", "SRegionProtector"]

@@ -24,7 +24,7 @@ class Placeholders : PluginBase() {
                 LuckPermsProvider.registerPlaceholders(api)
                 logger.info("${TextFormat.AQUA}LuckPerms placeholders loaded")
             }
-            
+
             getPlugin("Multipass")?.let {
                 MultipassProvider.registerPlaceholders(api)
                 logger.info("${TextFormat.AQUA}Multipass placeholders loaded")
@@ -48,6 +48,11 @@ class Placeholders : PluginBase() {
             getPlugin("SynapseAPI")?.let {
                 SynapseAPIProvider.registerPlaceholders(api)
                 logger.info("${TextFormat.AQUA}SynapseAPI placeholders loaded")
+            }
+
+            getPlugin("SRegionProtector")?.let {
+                SRegionProtectorProvider.registerPlaceholders(api)
+                logger.info("${TextFormat.AQUA}SRegionProtector placeholders loaded")
             }
         }
 
