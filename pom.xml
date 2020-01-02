@@ -50,9 +50,9 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <artifactId>luckperms-api</artifactId>
-            <groupId>me.lucko.luckperms</groupId>
-            <version>4.3</version>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

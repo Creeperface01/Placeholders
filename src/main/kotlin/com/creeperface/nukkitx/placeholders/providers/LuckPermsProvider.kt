@@ -4,9 +4,8 @@ import cn.nukkit.utils.MainLogger
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import com.creeperface.nukkitx.placeholders.utils.lp.LPPlaceholderProvider
 import com.creeperface.nukkitx.placeholders.utils.lp.PlaceholderPlatform
-import me.lucko.luckperms.LuckPerms
+import net.luckperms.api.LuckPermsProvider
 import java.util.function.BiFunction as BFunc
-import java.util.function.Function as Func
 
 /**
  * @author CreeperFace
@@ -16,16 +15,10 @@ object LuckPermsProvider : PlaceholderPlatform {
     private const val PREFIX = "luckperms_"
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
-        val provider = LPPlaceholderProvider(this, LuckPerms.getApi())
+        val provider = LPPlaceholderProvider(this, LuckPermsProvider.get())
 
         try {
-            val placeholders = LPPlaceholderProvider::class.java.getDeclaredField("placeholders")
-            placeholders.isAccessible = true
-
-            @Suppress("UNCHECKED_CAST")
-            val names = placeholders.get(provider) as Map<String, Any>
-
-            for ((name, value) in names) {
+            for ((name, value) in provider.placeholders) {
                 var name = name
 
                 if (value.javaClass.declaredMethods.first { it.name == "handle" }.parameterCount == 4) { //static
@@ -52,14 +45,14 @@ object LuckPermsProvider : PlaceholderPlatform {
                 }
 
                 papi.visitorSensitivePlaceholder<String?>(
-                    name = PREFIX + name,
-                    loader = BFunc { p, params ->
-                        provider.onPlaceholderRequest(
-                            p,
-                            getPlaceholderWithParams(name, params.getAll().values + params.getUnnamed())
-                        )
-                    },
-                    processParameters = true
+                        name = PREFIX + name,
+                        loader = BFunc { p, params ->
+                            provider.onPlaceholderRequest(
+                                    p,
+                                    getPlaceholderWithParams(name, params.getAll().values + params.getUnnamed())
+                            )
+                        },
+                        processParameters = true
                 )
             }
 

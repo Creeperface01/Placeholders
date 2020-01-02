@@ -31,18 +31,26 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import me.lucko.luckperms.api.*;
-import me.lucko.luckperms.api.caching.MetaContexts;
-import me.lucko.luckperms.api.caching.PermissionData;
-import me.lucko.luckperms.api.caching.UserData;
-import me.lucko.luckperms.api.metastacking.MetaStackDefinition;
-import me.lucko.luckperms.api.metastacking.MetaStackElement;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.cacheddata.CachedDataManager;
+import net.luckperms.api.cacheddata.CachedPermissionData;
+import net.luckperms.api.metastacking.DuplicateRemovalFunction;
+import net.luckperms.api.metastacking.MetaStackDefinition;
+import net.luckperms.api.metastacking.MetaStackElement;
+import net.luckperms.api.model.group.Group;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.Node;
+import net.luckperms.api.node.NodeType;
+import net.luckperms.api.node.types.InheritanceNode;
+import net.luckperms.api.query.QueryOptions;
+import net.luckperms.api.track.Track;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Provides LuckPerms placeholders using the {@link LuckPermsApi}.
+ * Provides LuckPerms placeholders using the {@link LuckPerms}.
  */
 public class LPPlaceholderProvider implements PlaceholderProvider {
 
@@ -54,16 +62,16 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
     /**
      * The LuckPerms API instance
      */
-    private final LuckPermsApi api;
+    private final LuckPerms luckPerms;
 
     /**
      * The internal placeholders being "provided"
      */
-    private final Map<String, Placeholder> placeholders;
+    public final Map<String, Placeholder> placeholders;
 
-    public LPPlaceholderProvider(PlaceholderPlatform platform, LuckPermsApi api) {
+    public LPPlaceholderProvider(PlaceholderPlatform platform, LuckPerms luckPerms) {
         this.platform = platform;
-        this.api = api;
+        this.luckPerms = luckPerms;
 
         // register placeholders
         PlaceholderBuilder builder = new PlaceholderBuilder();
@@ -73,93 +81,95 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
 
     private void setup(PlaceholderBuilder builder) {
         builder.addDynamic("context", (player, user, userData, contexts, key) ->
-                this.api.getContextManager().getApplicableContext(player).getValues(key).stream()
-                        .collect(Collectors.joining(", "))
+                String.join(", ", this.luckPerms.getContextManager().getContext(player).getValues(key))
         );
-        builder.addStatic("groups", (player, user, userData, contexts) ->
-                user.getOwnNodes()
+        builder.addStatic("groups", (player, user, userData, queryOptions) ->
+                user.getNodes()
                         .stream()
-                        .filter(Node::isGroupNode)
-                        .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                        .map(Node::getGroupName)
+                        .filter(NodeType.INHERITANCE::matches)
+                        .map(NodeType.INHERITANCE::cast)
+                        .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                        .map(InheritanceNode::getGroupName)
                         .map(this::convertGroupDisplayName)
                         .collect(Collectors.joining(", "))
         );
-        builder.addStatic("primary_group_name", (player, user, userData, contexts) -> convertGroupDisplayName(user.getPrimaryGroup()));
-        builder.addDynamic("has_permission", (player, user, userData, contexts, node) ->
-                user.getOwnNodes().stream()
-                        .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                        .anyMatch(n -> n.getPermission().equals(node))
+        builder.addStatic("primary_group_name", (player, user, userData, queryOptions) -> convertGroupDisplayName(user.getPrimaryGroup()));
+        builder.addDynamic("has_permission", (player, user, userData, queryOptions, node) ->
+                user.getNodes().stream()
+                        .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                        .anyMatch(n -> n.getKey().equals(node))
         );
-        builder.addDynamic("inherits_permission", (player, user, userData, contexts, node) ->
-                user.resolveInheritances(contexts).stream()
-                        .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                        .anyMatch(n -> n.getPermission().equals(node))
+        builder.addDynamic("inherits_permission", (player, user, userData, queryOptions, node) ->
+                user.resolveInheritedNodes(queryOptions).stream()
+                        .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                        .anyMatch(n -> n.getKey().equals(node))
         );
-        builder.addDynamic("check_permission", (player, user, userData, contexts, node) -> player.hasPermission(node));
-        builder.addDynamic("in_group", (player, user, userData, contexts, groupName) ->
-                user.getOwnNodes().stream()
-                        .filter(Node::isGroupNode)
-                        .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                        .map(Node::getGroupName)
+        builder.addDynamic("check_permission", (player, user, userData, queryOptions, node) -> user.getCachedData().getPermissionData(queryOptions).checkPermission(node).asBoolean());
+        builder.addDynamic("in_group", (player, user, userData, queryOptions, groupName) ->
+                user.getNodes().stream()
+                        .filter(NodeType.INHERITANCE::matches)
+                        .map(NodeType.INHERITANCE::cast)
+                        .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                        .map(InheritanceNode::getGroupName)
                         .anyMatch(s -> s.equalsIgnoreCase(groupName))
         );
-        builder.addDynamic("inherits_group", (player, user, userData, contexts, groupName) -> player.hasPermission("group." + groupName));
-        builder.addDynamic("on_track", (player, user, userData, contexts, trackName) ->
-                this.api.getTrackSafe(trackName)
+        builder.addDynamic("inherits_group", (player, user, userData, queryOptions, groupName) -> user.getCachedData().getPermissionData(queryOptions).checkPermission("group." + groupName).asBoolean());
+        builder.addDynamic("on_track", (player, user, userData, queryOptions, trackName) ->
+                Optional.ofNullable(this.luckPerms.getTrackManager().getTrack(trackName))
                         .map(t -> t.containsGroup(user.getPrimaryGroup()))
                         .orElse(false)
         );
-        builder.addDynamic("has_groups_on_track", (player, user, userData, contexts, trackName) ->
-                this.api.getTrackSafe(trackName)
-                        .map(t -> user.getOwnNodes().stream()
-                                .filter(Node::isGroupNode)
-                                .map(Node::getGroupName)
+        builder.addDynamic("has_groups_on_track", (player, user, userData, queryOptions, trackName) ->
+                Optional.ofNullable(this.luckPerms.getTrackManager().getTrack(trackName))
+                        .map(t -> user.getNodes().stream()
+                                .filter(NodeType.INHERITANCE::matches)
+                                .map(NodeType.INHERITANCE::cast)
+                                .map(InheritanceNode::getGroupName)
                                 .anyMatch(t::containsGroup)
                         )
                         .orElse(false)
         );
-        builder.addStatic("highest_group_by_weight", (player, user, userData, contexts) ->
-                user.getPermissions().stream()
-                        .filter(Node::isGroupNode)
-                        .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                        .map(Node::getGroupName)
-                        .map(this.api::getGroup)
+        builder.addStatic("highest_group_by_weight", (player, user, userData, queryOptions) ->
+                user.getNodes().stream()
+                        .filter(NodeType.INHERITANCE::matches)
+                        .map(NodeType.INHERITANCE::cast)
+                        .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                        .map(InheritanceNode::getGroupName)
+                        .map(n -> this.luckPerms.getGroupManager().getGroup(n))
                         .filter(Objects::nonNull)
-                        .sorted((o1, o2) -> {
+                        .min((o1, o2) -> {
                             int ret = Integer.compare(o1.getWeight().orElse(0), o2.getWeight().orElse(0));
                             return ret == 1 ? 1 : -1;
                         })
-                        .findFirst()
                         .map(Group::getName)
                         .map(this::convertGroupDisplayName)
                         .orElse("")
         );
-        builder.addStatic("lowest_group_by_weight", (player, user, userData, contexts) ->
-                user.getPermissions().stream()
-                        .filter(Node::isGroupNode)
-                        .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                        .map(Node::getGroupName)
-                        .map(this.api::getGroup)
+        builder.addStatic("lowest_group_by_weight", (player, user, userData, queryOptions) ->
+                user.getNodes().stream()
+                        .filter(NodeType.INHERITANCE::matches)
+                        .map(NodeType.INHERITANCE::cast)
+                        .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                        .map(InheritanceNode::getGroupName)
+                        .map(n -> this.luckPerms.getGroupManager().getGroup(n))
                         .filter(Objects::nonNull)
-                        .sorted((o1, o2) -> {
+                        .min((o1, o2) -> {
                             int ret = Integer.compare(o1.getWeight().orElse(0), o2.getWeight().orElse(0));
                             return ret == 1 ? -1 : 1;
                         })
-                        .findFirst()
                         .map(Group::getName)
                         .map(this::convertGroupDisplayName)
                         .orElse("")
         );
-        builder.addDynamic("first_group_on_tracks", (player, user, userData, contexts, argument) -> {
+        builder.addDynamic("first_group_on_tracks", (player, user, userData, queryOptions, argument) -> {
             List<String> tracks = Splitter.on(',').trimResults().splitToList(argument);
-            PermissionData permData = userData.getPermissionData(contexts);
+            CachedPermissionData permData = userData.getPermissionData(queryOptions);
             return tracks.stream()
-                    .map(this.api::getTrack)
+                    .map(n -> this.luckPerms.getTrackManager().getTrack(n))
                     .filter(Objects::nonNull)
                     .map(Track::getGroups)
                     .map(groups -> groups.stream()
-                            .filter(s -> permData.getPermissionValue("group." + s).asBoolean())
+                            .filter(s -> permData.checkPermission("group." + s).asBoolean())
                             .findFirst()
                     )
                     .filter(Optional::isPresent)
@@ -168,16 +178,16 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
                     .map(this::convertGroupDisplayName)
                     .orElse("");
         });
-        builder.addDynamic("last_group_on_tracks", (player, user, userData, contexts, argument) -> {
+        builder.addDynamic("last_group_on_tracks", (player, user, userData, queryOptions, argument) -> {
             List<String> tracks = Splitter.on(',').trimResults().splitToList(argument);
-            PermissionData permData = userData.getPermissionData(contexts);
+            CachedPermissionData permData = userData.getPermissionData(queryOptions);
             return tracks.stream()
-                    .map(this.api::getTrack)
+                    .map(n -> this.luckPerms.getTrackManager().getTrack(n))
                     .filter(Objects::nonNull)
                     .map(Track::getGroups)
                     .map(Lists::reverse)
                     .map(groups -> groups.stream()
-                            .filter(s -> permData.getPermissionValue("group." + s).asBoolean())
+                            .filter(s -> permData.checkPermission("group." + s).asBoolean())
                             .findFirst()
                     )
                     .filter(Optional::isPresent)
@@ -186,74 +196,87 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
                     .map(this::convertGroupDisplayName)
                     .orElse("");
         });
-        builder.addDynamic("expiry_time", (player, user, userData, contexts, node) -> {
+        builder.addDynamic("expiry_time", (player, user, userData, queryOptions, node) -> {
             long currentTime = System.currentTimeMillis() / 1000L;
-            return user.getPermissions().stream()
-                    .filter(Node::isTemporary)
-                    .filter(n -> n.getPermission().equals(node))
-                    .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                    .map(Node::getExpiryUnixTime)
+            return user.getNodes().stream()
+                    .filter(Node::hasExpiry)
+                    .filter(n -> n.getKey().equals(node))
+                    .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                    .map(Node::getExpiry)
+                    .map(Instant::getEpochSecond)
                     .findFirst()
                     .map(e -> formatTime((int) (e - currentTime)))
                     .orElse("");
         });
-        builder.addDynamic("inherited_expiry_time", (player, user, userData, contexts, node) -> {
+        builder.addDynamic("inherited_expiry_time", (player, user, userData, queryOptions, node) -> {
             long currentTime = System.currentTimeMillis() / 1000L;
-            return user.getAllNodes().stream()
-                    .filter(Node::isTemporary)
-                    .filter(n -> n.getPermission().equals(node))
-                    .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                    .map(Node::getExpiryUnixTime)
+            return user.resolveInheritedNodes(QueryOptions.nonContextual()).stream()
+                    .filter(Node::hasExpiry)
+                    .filter(n -> n.getKey().equals(node))
+                    .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                    .map(Node::getExpiry)
+                    .map(Instant::getEpochSecond)
                     .findFirst()
                     .map(e -> formatTime((int) (e - currentTime)))
                     .orElse("");
         });
-        builder.addDynamic("group_expiry_time", (player, user, userData, contexts, group) -> {
+        builder.addDynamic("group_expiry_time", (player, user, userData, queryOptions, group) -> {
             long currentTime = System.currentTimeMillis() / 1000L;
-            return user.getPermissions().stream()
-                    .filter(Node::isTemporary)
-                    .filter(Node::isGroupNode)
+            return user.getNodes().stream()
+                    .filter(Node::hasExpiry)
+                    .filter(NodeType.INHERITANCE::matches)
+                    .map(NodeType.INHERITANCE::cast)
                     .filter(n -> n.getGroupName().equalsIgnoreCase(group))
-                    .filter(n -> n.shouldApplyWithContext(contexts.getContexts()))
-                    .map(Node::getExpiryUnixTime)
+                    .filter(n -> n.getContexts().isSatisfiedBy(queryOptions.context()))
+                    .map(Node::getExpiry)
+                    .map(Instant::getEpochSecond)
                     .findFirst()
                     .map(e -> formatTime((int) (e - currentTime)))
                     .orElse("");
         });
-        builder.addStatic("prefix", (player, user, userData, contexts) -> Strings.nullToEmpty(userData.getMetaData(this.api.getContextsForPlayer(player)).getPrefix()));
-        builder.addStatic("suffix", (player, user, userData, contexts) -> Strings.nullToEmpty(userData.getMetaData(this.api.getContextsForPlayer(player)).getSuffix()));
-        builder.addDynamic("meta", (player, user, userData, contexts, node) -> userData.getMetaData(this.api.getContextsForPlayer(player)).getMeta().getOrDefault(node, ""));
-        builder.addDynamic("prefix_element", (player, user, userData, contexts, element) -> {
-            MetaStackElement stackElement = this.api.getMetaStackFactory().fromString(element).orElse(null);
-            if (stackElement == null) {
-                return "ERROR: Invalid element!";
-            }
-
-            MetaStackDefinition stackDefinition = this.api.getMetaStackFactory().createDefinition(ImmutableList.of(stackElement), "", "", "");
-            MetaContexts metaContexts = MetaContexts.of(contexts, stackDefinition, stackDefinition);
-            return Strings.nullToEmpty(userData.getMetaData(metaContexts).getPrefix());
+        builder.addStatic("prefix", (player, user, userData, queryOptions) -> Strings.nullToEmpty(userData.getMetaData(this.luckPerms.getContextManager().getQueryOptions(player)).getPrefix()));
+        builder.addStatic("suffix", (player, user, userData, queryOptions) -> Strings.nullToEmpty(userData.getMetaData(this.luckPerms.getContextManager().getQueryOptions(player)).getSuffix()));
+        builder.addDynamic("meta", (player, user, userData, queryOptions, node) -> {
+            List<String> values = userData.getMetaData(this.luckPerms.getContextManager().getQueryOptions(player)).getMeta().getOrDefault(node, ImmutableList.of());
+            return values.isEmpty() ? "" : values.iterator().next();
         });
-        builder.addDynamic("suffix_element", (player, user, userData, contexts, element) -> {
-            MetaStackElement stackElement = this.api.getMetaStackFactory().fromString(element).orElse(null);
+        builder.addDynamic("prefix_element", (player, user, userData, queryOptions, element) -> {
+            MetaStackElement stackElement = this.luckPerms.getMetaStackFactory().fromString(element).orElse(null);
             if (stackElement == null) {
                 return "ERROR: Invalid element!";
             }
 
-            MetaStackDefinition stackDefinition = this.api.getMetaStackFactory().createDefinition(ImmutableList.of(stackElement), "", "", "");
-            MetaContexts metaContexts = MetaContexts.of(contexts, stackDefinition, stackDefinition);
-            return Strings.nullToEmpty(userData.getMetaData(metaContexts).getSuffix());
+            MetaStackDefinition stackDefinition = this.luckPerms.getMetaStackFactory().createDefinition(ImmutableList.of(stackElement), DuplicateRemovalFunction.RETAIN_ALL, "", "", "");
+            QueryOptions newOptions = queryOptions.toBuilder()
+                    .option(MetaStackDefinition.PREFIX_STACK_KEY, stackDefinition)
+                    .option(MetaStackDefinition.SUFFIX_STACK_KEY, stackDefinition)
+                    .build();
+            return Strings.nullToEmpty(userData.getMetaData(newOptions).getPrefix());
+        });
+        builder.addDynamic("suffix_element", (player, user, userData, queryOptions, element) -> {
+            MetaStackElement stackElement = this.luckPerms.getMetaStackFactory().fromString(element).orElse(null);
+            if (stackElement == null) {
+                return "ERROR: Invalid element!";
+            }
+
+            MetaStackDefinition stackDefinition = this.luckPerms.getMetaStackFactory().createDefinition(ImmutableList.of(stackElement), DuplicateRemovalFunction.RETAIN_ALL, "", "", "");
+            QueryOptions newOptions = queryOptions.toBuilder()
+                    .option(MetaStackDefinition.PREFIX_STACK_KEY, stackDefinition)
+                    .option(MetaStackDefinition.SUFFIX_STACK_KEY, stackDefinition)
+                    .build();
+            return Strings.nullToEmpty(userData.getMetaData(newOptions).getSuffix());
         });
     }
 
     @Override
     public String onPlaceholderRequest(Player player, String placeholder) {
-        User user = this.api.getUserManager().getUser(player.getUniqueId());
+        User user = this.luckPerms.getUserManager().getUser(player.getUniqueId());
         if (user == null) {
             return "";
         }
 
-        UserData data = user.getCachedData();
-        Contexts contexts = this.api.getContextsForPlayer(player);
+        CachedDataManager data = user.getCachedData();
+        QueryOptions contexts = this.luckPerms.getContextManager().getQueryOptions(player);
 
         placeholder = placeholder.toLowerCase();
 
@@ -323,7 +346,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
      * @return a "display name" for the given group
      */
     private String convertGroupDisplayName(String groupName) {
-        Group group = this.api.getGroup(groupName);
+        Group group = this.luckPerms.getGroupManager().getGroup(groupName);
         if (group != null) {
             groupName = group.getFriendlyName();
         }
@@ -352,7 +375,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
     /**
      * Generic placeholder super interface
      */
-    private interface Placeholder {
+    public interface Placeholder {
 
     }
 
@@ -361,7 +384,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
      */
     @FunctionalInterface
     private interface DynamicPlaceholder extends Placeholder {
-        Object handle(Player player, User user, UserData userData, Contexts contexts, String argument);
+        Object handle(Player player, User user, CachedDataManager userData, QueryOptions queryOptions, String argument);
     }
 
     /**
@@ -369,7 +392,7 @@ public class LPPlaceholderProvider implements PlaceholderProvider {
      */
     @FunctionalInterface
     private interface StaticPlaceholder extends Placeholder {
-        Object handle(Player player, User user, UserData userData, Contexts contexts);
+        Object handle(Player player, User user, CachedDataManager userData, QueryOptions queryOptions);
     }
 
 }
