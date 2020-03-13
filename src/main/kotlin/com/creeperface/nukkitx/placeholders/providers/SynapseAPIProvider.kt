@@ -1,8 +1,10 @@
 package com.creeperface.nukkitx.placeholders.providers
 
+import cn.nukkit.utils.MainLogger
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import org.itxtech.synapseapi.SynapseAPI
-import java.util.function.Function
+import org.itxtech.synapseapi.SynapseEntry
+import org.itxtech.synapseapi.utils.ClientData
 
 /**
  * @author CreeperFace
@@ -13,50 +15,49 @@ object SynapseAPIProvider {
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
         val synapse = SynapseAPI.getInstance()
-        val entry = synapse.synapseEntries.values.singleOrNull() ?: return
+        val getEntry: () -> SynapseEntry? = {
+            synapse.synapseEntries.values.singleOrNull()
+        }
 
-        papi.staticPlaceholder<String>("${PREFIX}_server", Function { entry.serverDescription })
+        papi.buildStatic("${PREFIX}server") loader@{ _ ->
+            val entry = getEntry() ?: return@loader null
+            entry.serverDescription
+        }.build()
 
-        papi.staticPlaceholder<String>(
-            "${PREFIX}_servers",
-            Function { entry.clientData.clientList.values.joinToString(", ") { it.description } })
+        papi.buildStatic("${PREFIX}servers") loader@{ _ ->
+            val entry = getEntry() ?: return@loader null
 
-        fun getClientData(desc: String) = entry.clientData.clientList[entry.clientData.getHashByDescription(desc)]
+            entry.clientData?.clientList?.values?.joinToString(", ") { it.description }
+        }.build()
 
-        papi.staticPlaceholder<Int>(
-            name = "${PREFIX}_players",
-            loader = Function { params ->
-                val server = params.single() ?: return@Function 0
+        fun getClientData(desc: String): ClientData.Entry? {
+            val entry = getEntry() ?: return null
+            return entry.clientData.clientList[entry.clientData.getHashByDescription(desc)]
+        }
 
-                val dataEntry = getClientData(server) ?: return@Function 0
+        papi.buildStatic("${PREFIX}players") loader@{ params ->
+            MainLogger.getLogger().info(params.getAll().toString())
+            val server = params.single() ?: return@loader 0
 
-                return@Function dataEntry.playerCount
-            },
-            processParameters = true
-        )
+            val dataEntry = getClientData(server.value) ?: return@loader 0
 
-        papi.staticPlaceholder<Int>(
-            name = "${PREFIX}_max_players",
-            loader = Function { params ->
-                val server = params.single() ?: return@Function 0
+            return@loader dataEntry.playerCount
+        }.build()
 
-                val dataEntry = getClientData(server) ?: return@Function 0
+        papi.buildStatic("${PREFIX}max_players") loader@{ params ->
+            val server = params.single() ?: return@loader 0
 
-                return@Function dataEntry.maxPlayers
-            },
-            processParameters = true
-        )
+            val dataEntry = getClientData(server.value) ?: return@loader 0
 
-        papi.staticPlaceholder<String>(
-            name = "${PREFIX}_status",
-            loader = Function { params ->
-                val offlineValue = params["false"] ?: "offline"
+            dataEntry.maxPlayers
+        }.build()
 
-                val server = params["server"] ?: params.single() ?: return@Function offlineValue
+        papi.buildStatic("${PREFIX}status") loader@{ params ->
+            val offlineValue = params["false"] ?: "offline"
 
-                return@Function getClientData(server)?.let { params["true"] } ?: "online"
-            },
-            processParameters = true
-        )
+            val server = params["server"] ?: params.single() ?: return@loader offlineValue.toString()
+
+            return@loader getClientData(server.value)?.let { params["true"].toString() } ?: "online"
+        }.build()
     }
 }

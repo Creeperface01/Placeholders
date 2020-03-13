@@ -4,7 +4,6 @@ import cn.nukkit.plugin.PluginBase
 import cn.nukkit.utils.TextFormat
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import com.creeperface.nukkitx.placeholders.providers.*
-import java.util.function.Function
 
 /**
  * @author CreeperFace
@@ -24,7 +23,7 @@ class Placeholders : PluginBase() {
                 LuckPermsProvider.registerPlaceholders(api)
                 logger.info("${TextFormat.AQUA}LuckPerms placeholders loaded")
             }
-            
+
             getPlugin("Multipass")?.let {
                 MultipassProvider.registerPlaceholders(api)
                 logger.info("${TextFormat.AQUA}Multipass placeholders loaded")
@@ -51,6 +50,17 @@ class Placeholders : PluginBase() {
             }
         }
 
+//        api.buildStatic("test_placeholders") { params ->
+//            params.getAll().joinToString(", ") { it.value }
+//        }.aliases().build()
+
+//        PlaceholderAPI.getInstance().staticPlaceholder<String>(
+//                name = "test_placeholder",
+//                loader = Function { params ->
+//                    return@Function params.getAll().values.joinToString(", ")
+//                },
+//                processParameters = true
+//        )
     }
 
     private fun initConfig(api: PlaceholderAPI) {
@@ -69,7 +79,7 @@ class Placeholders : PluginBase() {
                 return@forEach
             }
 
-            api.staticPlaceholder<String>(name, Function { value.toString() })
+//            api.staticPlaceholder<String>(name, Function { value.toString() })
         }
     }
 }
