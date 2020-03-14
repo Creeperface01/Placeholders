@@ -1,6 +1,5 @@
 package com.creeperface.nukkitx.placeholders.providers
 
-import cn.nukkit.utils.MainLogger
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import org.itxtech.synapseapi.SynapseAPI
 import org.itxtech.synapseapi.SynapseEntry
@@ -32,11 +31,11 @@ object SynapseAPIProvider {
 
         fun getClientData(desc: String): ClientData.Entry? {
             val entry = getEntry() ?: return null
-            return entry.clientData.clientList[entry.clientData.getHashByDescription(desc)]
+
+            return entry.clientData?.clientList?.get(entry.clientData.getHashByDescription(desc))
         }
 
         papi.buildStatic("${PREFIX}players") loader@{ params ->
-            MainLogger.getLogger().info(params.getAll().toString())
             val server = params.single() ?: return@loader 0
 
             val dataEntry = getClientData(server.value) ?: return@loader 0
@@ -57,7 +56,7 @@ object SynapseAPIProvider {
 
             val server = params["server"] ?: params.single() ?: return@loader offlineValue.toString()
 
-            return@loader getClientData(server.value)?.let { params["true"].toString() } ?: "online"
+            return@loader getClientData(server.value)?.let { params["true"] } ?: "online"
         }.build()
     }
 }
