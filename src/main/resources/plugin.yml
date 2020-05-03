@@ -1,5 +1,5 @@
 name: Placeholders
-version: 1.3.1
+version: 1.3
 api: ["1.0.0"]
 main: com.creeperface.nukkitx.placeholders.Placeholders
 description: "Placeholder provider for nukkit"
@@ -7,7 +7,3 @@ author: CreeperFace
 
 depend: ["PlaceholderAPI"]
 softdepend: ["LuckPerms", "Factions", "EconomyAPI", "Residence", "SynapseAPI"]
-
-commands:
-  reload_synapse_placeholders:
-    description: "relaod"

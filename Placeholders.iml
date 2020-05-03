@@ -8,8 +8,8 @@
         </compilerSettings>
         <compilerArguments>
           <option name="jvmTarget" value="1.8" />
-          <option name="languageVersion" value="1.4" />
-          <option name="apiVersion" value="1.4" />
+          <option name="languageVersion" value="1.3" />
+          <option name="apiVersion" value="1.3" />
           <option name="pluginOptions">
             <array />
           </option>
@@ -27,17 +27,21 @@
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src/main/kotlin" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/kotlin" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4-M1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test:1.4-M1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.70" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.3.70" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.3.70" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains:annotations:13.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.70" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test:1.3.70" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains.kotlin:kotlin-test-common:1.3.70" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: cn.nukkit:nukkit:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: com.creeperface.nukkit.placeholderapi:PlaceholderAPI:1.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-reflect:1.4-M1" level="project" />
+    <orderEntry type="library" name="Maven: com.creeperface.nukkit.placeholderapi:PlaceholderAPI:1.3-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: net.luckperms:api:5.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: me.onebone:economyapi:1.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.itxtech.synapse:synapse-api:1.0-SNAPSHOT" level="project" />
