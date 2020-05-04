@@ -15,16 +15,16 @@ object SynapseAPIProvider {
         val synapse = SynapseAPI.getInstance()
         val entry = synapse.synapseEntries.values.singleOrNull() ?: return
 
-        papi.staticPlaceholder<String>("${PREFIX}_server", Function { entry.serverDescription })
+        papi.staticPlaceholder<String>("${PREFIX}server", Function { entry.serverDescription })
 
         papi.staticPlaceholder<String>(
-                "${PREFIX}_servers",
+                "${PREFIX}servers",
                 Function { entry.clientData.clientList.values.joinToString(", ") { it.description } })
 
         fun getClientData(desc: String) = entry.clientData.clientList[entry.clientData.getHashByDescription(desc)]
 
         papi.staticPlaceholder<Int>(
-                name = "${PREFIX}_players",
+                name = "${PREFIX}players",
                 loader = Function { params ->
                     val server = params.single() ?: return@Function 0
 
@@ -35,7 +35,7 @@ object SynapseAPIProvider {
         )
 
         papi.staticPlaceholder<Int>(
-                name = "${PREFIX}_max_players",
+                name = "${PREFIX}max_players",
                 loader = Function { params ->
                     val server = params.single() ?: return@Function 0
 
@@ -46,7 +46,7 @@ object SynapseAPIProvider {
         )
 
         papi.staticPlaceholder<String>(
-                name = "${PREFIX}_status",
+                name = "${PREFIX}status",
                 loader = Function { params ->
                     val offlineValue = params["false"] ?: "offline"
 
