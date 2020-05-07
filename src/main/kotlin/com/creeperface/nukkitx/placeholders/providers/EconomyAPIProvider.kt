@@ -15,7 +15,7 @@ object EconomyAPIProvider {
     fun registerPlaceholders(papi: PlaceholderAPI) {
         val api = EconomyAPI.getInstance()
 
-        papi.visitorSensitivePlaceholder<Double?>("${PREFIX}money", BiFunction { p, params ->
+        papi.visitorSensitivePlaceholder("${PREFIX}money", BiFunction { p, params ->
             var money = api.myMoney(p)
 
             params["acc"]?.let {

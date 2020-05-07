@@ -14,37 +14,37 @@ object MultipassProvider {
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
 
-        papi.visitorSensitivePlaceholder<String?>("${PREFIX}prefix", BiFunction { p, _ ->
+        papi.visitorSensitivePlaceholder("${PREFIX}prefix", BiFunction { p, _ ->
             Multipass.getPrefix(p)
         })
 
-        papi.visitorSensitivePlaceholder<String?>("${PREFIX}suffix", BiFunction { p, _ ->
+        papi.visitorSensitivePlaceholder("${PREFIX}suffix", BiFunction { p, _ ->
             Multipass.getSuffix(p)
         })
 
-        papi.visitorSensitivePlaceholder<String?>("${PREFIX}group", BiFunction { p, _ ->
+        papi.visitorSensitivePlaceholder("${PREFIX}group", BiFunction { p, _ ->
             Multipass.getGroup(p)
         })
 
-        papi.visitorSensitivePlaceholder<String>("${PREFIX}groups", BiFunction { p, _ ->
+        papi.visitorSensitivePlaceholder("${PREFIX}groups", BiFunction { p, _ ->
             Multipass.getGroups(p).joinToString(", ")
         })
 
-        papi.staticPlaceholder<String?>(
+        papi.staticPlaceholder(
                 name = "${PREFIX}group_prefix",
                 loader = Function { params ->
                     Multipass.getGroupPrefix(params.single())
                 }
         )
 
-        papi.staticPlaceholder<String?>(
+        papi.staticPlaceholder(
                 name = "${PREFIX}group_suffix",
                 loader = Function { params ->
                     Multipass.getGroupSuffix(params.single())
                 }
         )
 
-        papi.staticPlaceholder<Int>(
+        papi.staticPlaceholder(
                 name = "${PREFIX}group_priority",
                 loader = Function { params ->
                     Multipass.getGroupPriority(params.single())

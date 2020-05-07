@@ -15,15 +15,17 @@ object SynapseAPIProvider {
         val synapse = SynapseAPI.getInstance()
         val entry = synapse.synapseEntries.values.singleOrNull() ?: return
 
-        papi.staticPlaceholder<String>("${PREFIX}server", Function { entry.serverDescription })
+        papi.staticPlaceholder("${PREFIX}server", Function { entry.serverDescription })
 
-        papi.staticPlaceholder<String>(
+        papi.staticPlaceholder(
                 "${PREFIX}servers",
-                Function { entry.clientData.clientList.values.joinToString(", ") { it.description } })
+                Function {
+                    (entry.clientData?.clientList?.values ?: emptyList()).joinToString(", ") { it.description }
+                })
 
-        fun getClientData(desc: String) = entry.clientData.clientList[entry.clientData.getHashByDescription(desc)]
+        fun getClientData(desc: String) = entry.clientData?.clientList?.get(entry.clientData.getHashByDescription(desc))
 
-        papi.staticPlaceholder<Int>(
+        papi.staticPlaceholder(
                 name = "${PREFIX}players",
                 loader = Function { params ->
                     val server = params.single() ?: return@Function 0
@@ -34,7 +36,7 @@ object SynapseAPIProvider {
                 }
         )
 
-        papi.staticPlaceholder<Int>(
+        papi.staticPlaceholder(
                 name = "${PREFIX}max_players",
                 loader = Function { params ->
                     val server = params.single() ?: return@Function 0
@@ -45,14 +47,14 @@ object SynapseAPIProvider {
                 }
         )
 
-        papi.staticPlaceholder<String>(
+        papi.staticPlaceholder(
                 name = "${PREFIX}status",
                 loader = Function { params ->
                     val offlineValue = params["false"] ?: "offline"
 
                     val server = params["server"] ?: params.single() ?: return@Function offlineValue
 
-                    return@Function getClientData(server)?.let { params["true"] } ?: "online"
+                    return@Function getClientData(server)?.let { params["true"] ?: "online" } ?: offlineValue
                 }
         )
     }
