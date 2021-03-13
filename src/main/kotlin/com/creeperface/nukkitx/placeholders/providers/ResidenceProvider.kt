@@ -3,7 +3,6 @@ package com.creeperface.nukkitx.placeholders.providers
 import com.bekvon.bukkit.residence.Residence
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import java.util.*
-import java.util.function.BiFunction
 
 /**
  * @author CreeperFace
@@ -13,101 +12,169 @@ object ResidenceProvider {
     private const val PREFIX = "res_"
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
-        papi.visitorSensitivePlaceholder("${PREFIX}current", BiFunction { p, _ ->
-            Residence.getResidenceManager().getNameByLoc(p) ?: ""
-        })
+        papi.build<String>("${PREFIX}current") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_owner", BiFunction { p, _ ->
-            Residence.getResidenceManager().getByLoc(p)?.owner ?: ""
-        })
+            visitorLoader {
+                Residence.getResidenceManager().getNameByLoc(player) ?: ""
+            }
+        }
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_rent_days", BiFunction { p, _ ->
-            Residence.getRentManager().getRentDays(Residence.getResidenceManager().getNameByLoc(p))
-        })
+        papi.build<String>("${PREFIX}current_owner") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_rent_ends", BiFunction { p, _ ->
-            Residence.getLeaseManager().getExpireTime(Residence.getResidenceManager().getByLoc(p)?.name) ?: Date(0)
-        })
+            visitorLoader {
+                Residence.getResidenceManager().getByLoc(player)?.owner ?: ""
+            }
+        }
+        papi.build<Int>("${PREFIX}current_rent_days") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_rented_by", BiFunction { p, _ ->
-            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction null
+            visitorLoader {
+                Residence.getRentManager().getRentDays(Residence.getResidenceManager().getNameByLoc(player))
+            }
+        }
+        papi.build<Date>("${PREFIX}current_rent_ends") {
+//            processParameters(true)
 
-            if (Residence.getLeaseManager().save().containsKey(res.name)) res.owner else ""
-        })
+            visitorLoader {
+                Residence.getLeaseManager().getExpireTime(Residence.getResidenceManager().getByLoc(player)?.name)
+                    ?: Date(0)
+            }
+        }
+        papi.build<String>("${PREFIX}current_rented_by") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_rent_price", BiFunction { p, _ ->
-            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction 0
+            visitorLoader {
+                val res = Residence.getResidenceManager().getByLoc(player) ?: return@visitorLoader null
 
-            Residence.getRentManager().getCostOfRent(res.name)
-        })
+                if (Residence.getLeaseManager().save().containsKey(res.name)) res.owner else ""
+            }
+        }
+        papi.build<Int>("${PREFIX}current_rent_price") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_for_rent", BiFunction { p, _ ->
-            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction false
+            visitorLoader {
+                val res = Residence.getResidenceManager().getByLoc(player) ?: return@visitorLoader 0
 
-            Residence.getRentManager().isForRent(res.name)
-        })
+                Residence.getRentManager().getCostOfRent(res.name)
+            }
+        }
+        papi.build<Boolean>("${PREFIX}current_for_rent") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_sale_price", BiFunction { p, _ ->
-            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction 0
+            visitorLoader {
+                val res = Residence.getResidenceManager().getByLoc(player) ?: return@visitorLoader false
 
-            Residence.getTransactionManager().getSaleAmount(res.name)
-        })
+                Residence.getRentManager().isForRent(res.name)
+            }
+        }
+        papi.build<Int>("${PREFIX}current_sale_price") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_for_sale", BiFunction { p, _ ->
-            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction false
+            visitorLoader {
+                val res = Residence.getResidenceManager().getByLoc(player) ?: return@visitorLoader 0
 
-            Residence.getTransactionManager().isForSale(res.name)
-        })
+                Residence.getTransactionManager().getSaleAmount(res.name)
+            }
+        }
+        papi.build<Boolean>("${PREFIX}current_for_sale") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}current_bank", BiFunction { p, _ ->
-            val res = Residence.getResidenceManager().getByLoc(p) ?: return@BiFunction 0
+            visitorLoader {
+                val res = Residence.getResidenceManager().getByLoc(player) ?: return@visitorLoader false
 
-            res.bank.storedMoney
-        })
+                Residence.getTransactionManager().isForSale(res.name)
+            }
+        }
+
+        papi.build<Int>("${PREFIX}current_bank") {
+//            processParameters(true)
+
+            visitorLoader {
+                val res = Residence.getResidenceManager().getByLoc(player) ?: return@visitorLoader 0
+
+                res.bank.storedMoney
+            }
+        }
 
         //user
-        papi.visitorSensitivePlaceholder("${PREFIX}user_max_rentables", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).maxRentables
-        })
+        papi.build<Int>("${PREFIX}user_max_rentables") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_block_cost", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).costPerBlock
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).maxRentables
+            }
+        }
+        papi.build<Double>("${PREFIX}user_block_cost") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_max_sub_depth", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).maxSubzoneDepth
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).costPerBlock
+            }
+        }
+        papi.build<Int>("${PREFIX}user_max_sub_depth") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_max_zones", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).maxZones
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).maxSubzoneDepth
+            }
+        }
+        papi.build<Int>("${PREFIX}user_max_zones") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_max_h", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).maxY
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).maxZones
+            }
+        }
+        papi.build<Int>("${PREFIX}user_max_h") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_max_w", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).maxX
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).maxY
+            }
+        }
+        papi.build<Int>("${PREFIX}user_max_w") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_max_l", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).maxZ
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).maxX
+            }
+        }
+        papi.build<Int>("${PREFIX}user_max_l") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_can_create", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroup(p).canCreateResidences()
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).maxZ
+            }
+        }
+        papi.build<Boolean>("${PREFIX}user_can_create") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_amount", BiFunction { p, _ ->
-            Residence.getResidenceManager().getOwnedZoneCount(p.name)
-        })
+            visitorLoader {
+                Residence.getPermissionManager().getGroup(player).canCreateResidences()
+            }
+        }
+        papi.build<Int>("${PREFIX}user_amount") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_admin", BiFunction { p, _ ->
-            Residence.getPermissionManager().isResidenceAdmin(p)
-        })
+            visitorLoader {
+                Residence.getResidenceManager().getOwnedZoneCount(player.name)
+            }
+        }
+        papi.build<Boolean>("${PREFIX}user_admin") {
+//            processParameters(true)
 
-        papi.visitorSensitivePlaceholder("${PREFIX}user_group", BiFunction { p, _ ->
-            Residence.getPermissionManager().getGroupNameByPlayer(p)
-        })
+            visitorLoader {
+                Residence.getPermissionManager().isResidenceAdmin(player)
+            }
+        }
+        papi.build<String>("${PREFIX}user_group") {
+//            processParameters(true)
+
+            visitorLoader {
+                Residence.getPermissionManager().getGroupNameByPlayer(player)
+            }
+        }
     }
 }

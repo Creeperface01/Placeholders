@@ -2,7 +2,6 @@ package com.creeperface.nukkitx.placeholders.providers
 
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import org.itxtech.synapseapi.SynapseAPI
-import java.util.function.Function
 
 /**
  * @author CreeperFace
@@ -15,47 +14,57 @@ object SynapseAPIProvider {
         val synapse = SynapseAPI.getInstance()
         val entry = synapse.synapseEntries.values.singleOrNull() ?: return
 
-        papi.staticPlaceholder("${PREFIX}server", Function { entry.serverDescription })
+        papi.build<String>("${PREFIX}server") {
+            loader {
+                entry.serverDescription
+            }
+        }
 
-        papi.staticPlaceholder(
-                "${PREFIX}servers",
-                Function {
-                    (entry.clientData?.clientList?.values ?: emptyList()).joinToString(", ") { it.description }
-                })
+        papi.build<String>("${PREFIX}servers") {
+            loader {
+                (entry.clientData?.clientList?.values ?: emptyList()).joinToString(", ") { it.description }
+            }
+        }
 
         fun getClientData(desc: String) = entry.clientData?.clientList?.get(entry.clientData.getHashByDescription(desc))
 
-        papi.staticPlaceholder(
-                name = "${PREFIX}players",
-                loader = Function { params ->
-                    val server = params.single() ?: return@Function 0
+        papi.build<Int>("${PREFIX}players") {
+            loader {
+                val server = parameters.single()?.value
 
-                    val dataEntry = getClientData(server) ?: return@Function 0
+                if (server != null) {
+                    val dataEntry = getClientData(server) ?: return@loader 0
 
-                    return@Function dataEntry.playerCount
+                    return@loader dataEntry.playerCount
                 }
-        )
 
-        papi.staticPlaceholder(
-                name = "${PREFIX}max_players",
-                loader = Function { params ->
-                    val server = params.single() ?: return@Function 0
+                entry.clientData?.clientList?.values?.sumBy { it.playerCount } ?: 0
+            }
+        }
 
-                    val dataEntry = getClientData(server) ?: return@Function 0
+        papi.build<Int>("${PREFIX}max_players") {
+            loader {
+                val server = parameters.single()?.value
 
-                    return@Function dataEntry.maxPlayers
+                if (server != null) {
+                    val dataEntry = getClientData(server) ?: return@loader 0
+
+                    dataEntry.maxPlayers
                 }
-        )
 
-        papi.staticPlaceholder(
-                name = "${PREFIX}status",
-                loader = Function { params ->
-                    val offlineValue = params["false"] ?: "offline"
+                entry.clientData?.clientList?.values?.sumBy { it.maxPlayers } ?: 0
+            }
+        }
 
-                    val server = params["server"] ?: params.single() ?: return@Function offlineValue
+        papi.build<String>("${PREFIX}status") {
+            loader {
+                val offlineValue = parameters["false"]?.value ?: "offline"
 
-                    return@Function getClientData(server)?.let { params["true"] ?: "online" } ?: offlineValue
-                }
-        )
+                val server = parameters["server"]?.value ?: parameters.single()?.value ?: return@loader offlineValue
+
+                getClientData(server)?.let { parameters["true"]?.value ?: "online" } ?: offlineValue
+            }
+        }
+
     }
 }

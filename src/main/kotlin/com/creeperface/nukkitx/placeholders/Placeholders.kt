@@ -4,7 +4,6 @@ import cn.nukkit.plugin.PluginBase
 import cn.nukkit.utils.TextFormat
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import com.creeperface.nukkitx.placeholders.providers.*
-import java.util.function.Function
 
 /**
  * @author CreeperFace
@@ -69,7 +68,11 @@ class Placeholders : PluginBase() {
                 return@forEach
             }
 
-            api.staticPlaceholder<String>(name, Function { value.toString() })
+            api.build<String>(name) {
+                loader {
+                    value.toString()
+                }
+            }
         }
     }
 }

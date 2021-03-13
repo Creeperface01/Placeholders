@@ -5,7 +5,6 @@ import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import com.creeperface.nukkitx.placeholders.utils.lp.LPPlaceholderProvider
 import com.creeperface.nukkitx.placeholders.utils.lp.PlaceholderPlatform
 import net.luckperms.api.LuckPermsProvider
-import java.util.function.BiFunction as BFunc
 
 /**
  * @author CreeperFace
@@ -44,15 +43,16 @@ object LuckPermsProvider : PlaceholderPlatform {
 //                        })
                 }
 
-                papi.visitorSensitivePlaceholder(
-                        name = PREFIX + name,
-                        loader = BFunc { p, params ->
-                            provider.onPlaceholderRequest(
-                                    p,
-                                    getPlaceholderWithParams(name, params.getAll().values + params.getUnnamed())
-                            )
-                        }
-                )
+                papi.build<String>(PREFIX + name) {
+                    processParameters(true)
+
+                    visitorLoader {
+                        provider.onPlaceholderRequest(
+                            player,
+                            getPlaceholderWithParams(name, parameters.getAll().map { it.value })
+                        )
+                    }
+                }
             }
 
         } catch (e: Exception) {

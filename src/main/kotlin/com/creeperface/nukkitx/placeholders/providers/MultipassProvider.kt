@@ -2,8 +2,6 @@ package com.creeperface.nukkitx.placeholders.providers
 
 import com.creeperface.nukkit.placeholderapi.api.PlaceholderAPI
 import ru.nukkit.multipass.Multipass
-import java.util.function.BiFunction
-import java.util.function.Function
 
 /**
  * @author Zen
@@ -14,41 +12,49 @@ object MultipassProvider {
 
     fun registerPlaceholders(papi: PlaceholderAPI) {
 
-        papi.visitorSensitivePlaceholder("${PREFIX}prefix", BiFunction { p, _ ->
-            Multipass.getPrefix(p)
-        })
+        papi.build<String>("${PREFIX}prefix") {
+            visitorLoader {
+                Multipass.getPrefix(player)
+            }
+        }
 
-        papi.visitorSensitivePlaceholder("${PREFIX}suffix", BiFunction { p, _ ->
-            Multipass.getSuffix(p)
-        })
+        papi.build<String>("${PREFIX}suffix") {
+            visitorLoader {
+                Multipass.getSuffix(player)
+            }
+        }
 
-        papi.visitorSensitivePlaceholder("${PREFIX}group", BiFunction { p, _ ->
-            Multipass.getGroup(p)
-        })
+        papi.build<String>("${PREFIX}group") {
+            visitorLoader {
+                Multipass.getGroup(player)
+            }
+        }
 
-        papi.visitorSensitivePlaceholder("${PREFIX}groups", BiFunction { p, _ ->
-            Multipass.getGroups(p).joinToString(", ")
-        })
+        papi.build<String>("${PREFIX}groups") {
+            visitorLoader {
+                Multipass.getGroups(player).joinToString(", ")
+            }
+        }
 
-        papi.staticPlaceholder(
-                name = "${PREFIX}group_prefix",
-                loader = Function { params ->
-                    Multipass.getGroupPrefix(params.single())
-                }
-        )
+        papi.build<String>("${PREFIX}group_prefix") {
+            processParameters(true)
+            loader {
+                Multipass.getGroupPrefix(parameters.single()?.value)
+            }
+        }
 
-        papi.staticPlaceholder(
-                name = "${PREFIX}group_suffix",
-                loader = Function { params ->
-                    Multipass.getGroupSuffix(params.single())
-                }
-        )
+        papi.build<String>("${PREFIX}group_suffix") {
+            processParameters(true)
+            loader {
+                Multipass.getGroupSuffix(parameters.single()?.value)
+            }
+        }
 
-        papi.staticPlaceholder(
-                name = "${PREFIX}group_priority",
-                loader = Function { params ->
-                    Multipass.getGroupPriority(params.single())
-                }
-        )
+        papi.build<Int>("${PREFIX}group_priority") {
+            processParameters(true)
+            loader {
+                Multipass.getGroupPriority(parameters.single()?.value)
+            }
+        }
     }
 }
